@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>ProofGuard · Live Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f6f5f1;--fg:#1c1b19;--mut:#6b685f;--card:#fff;--bd:#dcd8cc;--ok:#1a7f4b;--bad:#c0332b;--unv:#9a6700;--acc:#3b4cca;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e0f12;--fg:#ecebe6;--mut:#9a978d;--card:#17181d;--bd:#2c2e36;--ok:#4cc38a;--bad:#ff6b61;--unv:#e0b341;--acc:#8c9bff}}
+:root[data-theme="dark"]{--bg:#0e0f12;--fg:#ecebe6;--mut:#9a978d;--card:#17181d;--bd:#2c2e36;--ok:#4cc38a;--bad:#ff6b61;--unv:#e0b341;--acc:#8c9bff}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+.w{max-width:960px;margin:0 auto;padding:22px 16px 40px}
+h1{font-size:26px;margin:0}h2{font-size:15px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
+.sub{color:var(--mut);margin:4px 0 18px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.tab{flex:0 0 auto;border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:10px;padding:8px 12px;cursor:pointer;font:inherit;text-align:left}
+.tab small{display:block;color:var(--mut);font-size:11px}.tab.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.q{font-size:18px;font-weight:600;margin:2px 0 6px}.ai{background:var(--bg);border-radius:8px;padding:8px 10px;color:var(--mut);font-size:14px}
+button.run{background:var(--acc);color:#fff;border:0;border-radius:9px;padding:9px 16px;font:inherit;font-weight:600;cursor:pointer;margin-top:10px}
+button.run:disabled{opacity:.5}
+.pipe{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.st{font-size:12px;border:1px solid var(--bd);border-radius:20px;padding:3px 10px;color:var(--mut)}.st.on{border-color:var(--acc);color:var(--acc)}.st.done{background:var(--acc);color:#fff;border-color:var(--acc)}
+.step{border:1px solid var(--bd);border-left-width:4px;border-radius:8px;padding:9px 11px;margin:8px 0;opacity:.35;transition:.3s}
+.step.show{opacity:1}.step.ok{border-left-color:var(--ok)}.step.bad{border-left-color:var(--bad)}.step.unv{border-left-color:var(--unv)}.step.inh{border-left-color:var(--mut)}
+.tag{font-size:11px;font-weight:700;letter-spacing:.06em;margin-right:6px}.ok .tag{color:var(--ok)}.bad .tag{color:var(--bad)}.unv .tag{color:var(--unv)}.inh .tag{color:var(--mut)}
+.ev{font-size:13px;color:var(--mut);margin-top:3px;font-family:ui-monospace,Menlo,Consolas,monospace}
+.verd{border-radius:10px;padding:12px;margin-top:12px;border:1px solid var(--bd)}.verd b.v{font-size:17px}
+.verd.bad{border-color:var(--bad)}.verd.ok{border-color:var(--ok)}.verd.unv{border-color:var(--unv)}
+pre{margin:8px 0 0;padding:10px;background:var(--bg);border-radius:8px;font-size:12px;overflow-x:auto}
+input{width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--fg);font:14px ui-monospace,Menlo,monospace}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:560px){.row{grid-template-columns:1fr}}
+label{font-size:12px;color:var(--mut)}.note{font-size:12.5px;color:var(--mut)}
+</style></head><body><div class="w">
+<h1>🛡️ ProofGuard <span style="font-weight:400;color:var(--mut)">live demo</span></h1>
+<p class="sub">Who watches the watchdog? ProofGuard checks AI-generated maths step by step, finds the <b>first</b> invalid inference, and abstains when evidence is missing.</p>
+
+<div class="card"><h2>1 · Pick a convincing AI solution</h2><div class="tabs" id="tabs"></div></div>
+
+<div class="card" id="main"><div class="q" id="q"></div><div class="ai" id="claim"></div>
+<button class="run" id="run">▶ Verify step by step</button>
+<div class="pipe" id="pipe"></div><div id="steps"></div><div id="out"></div></div>
+
+<div class="card"><h2>2 · Try the real equivalence checker</h2>
+<p class="note">This part runs live in your browser: it tests whether two expressions agree at many random points <i>and</i> at special points (0, ±1, 2, 3), so it catches counterexamples and domain changes. Use <code>x</code>, <code>^</code>, sin, cos, ln, sqrt, exp.</p>
+<div class="row"><div><label>Step before</label><input id="a" value="(x^2-4)/(x-2)"></div><div><label>Step after</label><input id="b" value="x+2"></div></div>
+<button class="run" id="chk">Check equivalence</button><div id="cres" class="verd" style="display:none"></div></div>
+
+<div class="card"><h2>Why this passes the “remove the AI” test</h2>
+<p class="note">Gemini reads messy, human-written solutions into structured steps and writes the explanation. Rule-based parsers cannot do this for free-form reasoning. <b>Verdicts never come from the LLM</b>: each step is checked by independent engines (algebra, calculus, linear algebra), and anything they cannot confirm is returned as UNVERIFIED instead of guessed.</p>
+<p class="note"><b>Honest scope:</b> the five cases above are scripted illustrations of the pipeline’s output so they replay identically every time; the checker in section 2 is live. Plug in your labelled test set to report real accuracy.</p></div>
+</div>
+<script>
+const C=[
+{d:"Algebra",t:"Extraneous root",q:"Solve √(2x+3) = x",claim:"AI answer: x = 3 or x = −1 ✔ “both verified”",
+s:[["ok","Square both sides: 2x + 3 = x²","(√(2x+3))² = 2x+3 for x ≥ −3/2 · implication holds"],["ok","Rearrange: x² − 2x − 3 = 0","expand(x² − (2x+3)) ≡ x² − 2x − 3"],["ok","Factor: (x − 3)(x + 1) = 0","expand((x−3)(x+1)) ≡ x² − 2x − 3"],["bad","Both roots satisfy the original equation, because squaring preserves equality","subs x=−1 → √1 = 1 ≠ −1 · squaring is not reversible"],["inh","Answer: x = 3 or x = −1","inherits step 4"]],
+why:"Squaring is only a one-way implication, so it can introduce extraneous roots. x = −1 fails the original equation.",fix:"Substitute every candidate back into the original (or impose x ≥ 0 before squaring). x=3: √9 = 3 ✓. Solution set: {3}.",c:"0.98"},
+{d:"Calculus",t:"Right answer, wrong proof",q:"Evaluate ∫ from −1 to 1 of dx/x",claim:"AI answer: 0 “by symmetry” (looks right!)",
+s:[["ok","An antiderivative of 1/x is ln|x| + C","d/dx ln|x| − 1/x simplifies to 0 for x ≠ 0"],["bad","Apply the Fundamental Theorem: [ln|x|] from −1 to 1","FTC needs a continuous integrand · 1/x has an infinite discontinuity at x = 0 ∈ [−1, 1]"],["inh","= ln 1 − ln 1 = 0","arithmetic valid, premise invalid"],["inh","Answer: 0","inherits step 2"]],
+why:"The final number 0 is only the Cauchy principal value. As an improper integral, ∫₀¹ dx/x = lim ε→0⁺ (−ln ε) = ∞, so the integral diverges.",fix:"Split at the singularity: ∫₋₁⁰ + ∫₀¹ and take each limit separately. Both diverge, so the integral does not exist.",c:"0.97"},
+{d:"Linear algebra",t:"Defective matrix",q:"Is A = [[1,0,0],[0,2,1],[0,0,2]] diagonalizable?",claim:"AI answer: Yes, A = PDP⁻¹ with D = diag(1,2,2)",
+s:[["ok","A is upper-triangular, so its eigenvalues are 1, 2, 2","charpoly(A) = (λ−1)(λ−2)²"],["bad","The eigenvalues are real, so A is diagonalizable","Real eigenvalues ⇏ diagonalizable · rank(A−2I) = 2 → nullity 1 < algebraic multiplicity 2"],["inh","Therefore A = PDP⁻¹ with D = diag(1,2,2)","no basis of 3 eigenvectors exists"]],
+why:"Diagonalizability needs geometric multiplicity = algebraic multiplicity for every eigenvalue. For λ = 2 they are 1 and 2.",fix:"Compute null(A − 2I): it has dimension 1, so A is defective. Its Jordan form has a 2×2 block J₂(2).",c:"0.99"},
+{d:"Calculus",t:"Clean proof (control)",q:"Differentiate f(x) = x²·e^(3x)",claim:"AI answer: f′(x) = e^(3x)(3x² + 2x)",
+s:[["ok","Product rule: f′ = 2x·e^(3x) + x²·(e^(3x))′","structure matches d(uv) = u′v + uv′"],["ok","Chain rule: (e^(3x))′ = 3e^(3x)","simplify(diff(exp(3x)) − 3exp(3x)) = 0"],["ok","f′(x) = e^(3x)(3x² + 2x)","simplify(diff(x²e^(3x)) − claimed) = 0"]],
+why:"Every step is independently confirmed, so ProofGuard raises no false alarm.",fix:"None needed.",c:"0.99"},
+{d:"Analysis",t:"Abstention demo",q:"Does Σ 1/(n² + ln n) converge, and to what?",claim:"AI answer: converges to π²/6 − 0.1 (cites a lemma)",
+s:[["ok","ln n ≥ 0 for n ≥ 1, so 1/(n² + ln n) ≤ 1/n²","inequality holds for all n ≥ 1"],["ok","By comparison with Σ1/n² (p = 2), the series converges","comparison test hypotheses satisfied"],["unv","By Hartmann’s Lemma 4.2 (2019), the sum equals π²/6 − 0.1","citation not in trusted source set · no closed form derivable · refusing to guess"]],
+why:"Convergence is proven. The claimed exact value rests on a source that cannot be found and cannot be derived, so ProofGuard says UNVERIFIED instead of true or false.",fix:"Treat the value as unproven. A human should check the cited lemma, or compute the sum numerically and compare.",c:"0.41 (below threshold)"}];
+const $=i=>document.getElementById(i);let cur=0,busy=false;
+$("tabs").innerHTML=C.map((c,i)=>`<button class="tab" data-i="${i}">${c.t}<small>${c.d}</small></button>`).join("");
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>sel(+b.dataset.i));
+const P=["Parse steps (Gemini)","Independent check (SymPy)","Locate first error","Explain + correct"];
+function sel(i){cur=i;const c=C[i];document.querySelectorAll(".tab").forEach((b,j)=>b.classList.toggle("on",j==i));
+$("q").textContent=c.q;$("claim").textContent=c.claim;$("out").innerHTML="";$("run").disabled=false;
+$("pipe").innerHTML=P.map(p=>`<span class="st">${p}</span>`).join("");
+$("steps").innerHTML=c.s.map((s,k)=>`<div class="step" id="s${k}"><span class="tag">STEP ${k+1}</span>${s[1]}</div>`).join("")}
+const T={ok:"VERIFIED",bad:"INVALID",unv:"UNVERIFIED",inh:"NOT TRUSTED"};
+const sleep=m=>new Promise(r=>setTimeout(r,m));
+$("run").onclick=async()=>{if(busy)return;busy=true;const my=cur,c=C[my];sel(my);$("run").disabled=true;const st=[...document.querySelectorAll(".st")];
+st[0].classList.add("on");await sleep(500);st[0].className="st done";st[1].classList.add("on");
+for(let k=0;k<c.s.length;k++){await sleep(550);const e=$("s"+k),s=c.s[k];e.classList.add("show",s[0]);
+e.innerHTML=`<span class="tag">STEP ${k+1} · ${T[s[0]]}</span>${s[1]}<div class="ev">${s[2]}</div>`}
+st[1].className="st done";st[2].classList.add("on");await sleep(500);st[2].className="st done";st[3].classList.add("on");await sleep(500);st[3].className="st done";
+const bi=c.s.findIndex(s=>s[0]=="bad"),has=c.s.some(s=>s[0]=="unv");
+const k=bi>=0?"bad":has?"unv":"ok",V={bad:`✖ INVALID — first incorrect inference: step ${bi+1}`,unv:"◐ PARTLY VERIFIED — one claim UNVERIFIED",ok:"✔ ALL STEPS VERIFIED"}[k];
+const rec={engine:["sympy","numeric-sampling"],llm_role:"parse+explain only",verdict_source:"symbolic engines",first_error:bi>=0?bi+1:null,confidence:c.c,abstain_threshold:0.6};
+$("out").innerHTML=`<div class="verd ${k}"><b class="v">${V}</b><p><b>Why:</b> ${c.why}</p><p><b>Corrected approach:</b> ${c.fix}</p><div class="note">Trust receipt</div><pre>${JSON.stringify(rec,null,1)}</pre></div>`;busy=false;$("run").disabled=false};
+function mk(s){s=s.replace(/\bln\b/g,"log").replace(/\bpi\b/g,"PI").replace(/\be\b/g,"E").replace(/\^/g,"**").replace(/(\d|\))\s*(?=[a-zA-Z(])/g,"$1*").replace(/\bx\s*(?=[(\d])/g,"x*");return new Function("x","with(Math){return "+s+"}")}
+$("chk").onclick=()=>{const o=$("cres");o.style.display="block";let f,g;try{f=mk($("a").value);g=mk($("b").value)}catch(e){o.className="verd unv";o.innerHTML="◐ UNVERIFIED — could not parse input.";return}
+const pts=[0,1,-1,2,3,-2,0.5];for(let i=0;i<60;i++)pts.push((Math.random()-.5)*12);
+let n=0,bad=null,dom=null;for(const x of pts){let a,b;try{a=f(x);b=g(x)}catch(e){continue}const fa=isFinite(a),fb=isFinite(b);
+if(!fa&&!fb)continue;if(fa!=fb){dom=dom??x;continue}n++;if(Math.abs(a-b)>1e-6*(1+Math.abs(a))){bad=[x,a,b];break}}
+const r=v=>+v.toFixed(4);
+if(bad){o.className="verd bad";o.innerHTML=`✖ <b>INVALID step</b> — counterexample at x = ${r(bad[0])}: before = ${r(bad[1])}, after = ${r(bad[2])}.`}
+else if(n<5){o.className="verd unv";o.innerHTML="◐ <b>UNVERIFIED</b> — too few valid sample points to decide. Refusing to guess."}
+else if(dom!=null){o.className="verd unv";o.innerHTML=`◐ <b>EQUIVALENT EXCEPT DOMAIN</b> — agree at ${n} points, but they differ in where they are defined (e.g. x = ${r(dom)}). Flag: the step silently changes the domain.`}
+else{o.className="verd ok";o.innerHTML=`✔ <b>Consistent</b> at ${n} points. Sampling gives strong evidence, not a proof; the symbolic engine confirms it in the full app.`}};
+sel(0);
+</script></body></html>
